@@ -2,8 +2,9 @@ import wave, struct, array, os
 #http://doc.sagemath.org/html/en/reference/misc/sage/media/wav.html
 class InputHandler:
     params = []
-
-
+    stereo_audio = []
+    # how many wav readings we will ignore
+    filter = 1000
     def __init__(self, args):
         print(args.target)
         print(args.test)
@@ -29,15 +30,18 @@ class InputHandler:
         fmt_size = sizes[waveFile.getsampwidth()]
         fmt = "<" + fmt_size * channels
 
-        ret = []
+
         # save the values read from the wav as tuples in a list, this is very expensive and needs improvement. see:
         # https://stackoverflow.com/questions/5804052/improve-speed-of-reading-and-converting-from-binary-file
         # https://www.cameronmacleod.com/blog/reading-wave-python
-        while waveFile.tell() < waveFile.getnframes():
-            decoded = struct.unpack(fmt, waveFile.readframes(1))
-            #print(decoded)
-            ret.append(decoded)
 
+        # only record the first 6 seconds of audio
+        while waveFile.tell() < self.params[2] * 6:#waveFile.getnframes():
+            decoded = struct.unpack(fmt, waveFile.readframes(1))
+            waveFile.setpos(waveFile.tell() + self.filter-1)
+            #print(decoded)
+            self.stereo_audio.append(decoded)
+        #print(self.stereo_audio)
 
         """
         
@@ -56,3 +60,12 @@ class InputHandler:
         
         """
         waveFile.close()
+
+    def get_stereo(self):
+        return self.stereo_audio
+
+    def get_params(self):
+        return self.params
+
+    def get_filter(self):
+        return self.filter

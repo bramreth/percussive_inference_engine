@@ -1,4 +1,4 @@
-import input_handler
+import input_handler, graph_builder
 import argparse
 
 
@@ -8,6 +8,9 @@ def init():
     parser.add_argument("--test", dest="test", action="store_true", help="set the generator to test mode.")
     args = parser.parse_args()
     handler = input_handler.InputHandler(args)
+
+    # pass the stereo audio to the graphing tool
+    builder = graph_builder.graph_builder(handler.get_stereo(), handler.get_params(), handler.get_filter())
 
 
 # initialise the input handler
