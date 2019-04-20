@@ -1,4 +1,4 @@
-import wave, struct, array, os
+import wave, struct
 #http://doc.sagemath.org/html/en/reference/misc/sage/media/wav.html
 class InputHandler:
     params = []
@@ -36,7 +36,7 @@ class InputHandler:
         # https://www.cameronmacleod.com/blog/reading-wave-python
 
         # only record the first 6 seconds of audio
-        while waveFile.tell() < self.params[2] * 6:#waveFile.getnframes():
+        while waveFile.tell() < self.params[2] * 30:#waveFile.getnframes():
             decoded = struct.unpack(fmt, waveFile.readframes(1))
             waveFile.setpos(waveFile.tell() + self.filter-1)
             #print(decoded)
@@ -58,6 +58,8 @@ class InputHandler:
         here is some beat detection with numpy
         https://stackoverflow.com/questions/12344951/detect-beat-and-play-wav-file-in-a-synchronised-manner
         
+        
+        rock you like a hurricane should be around 120 bpm, so i should see around 2 peaks a second
         """
         waveFile.close()
 
