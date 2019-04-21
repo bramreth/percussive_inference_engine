@@ -6,20 +6,17 @@ from scipy import stats
 
 class graph_builder:
 
-    def __init__(self, stereo_frames, params, filter):
-        # convert the stereo framse into left and right channels. then enumarte them before passing to the grapher
-        l_frames = []
-        r_frames = []
+    threshold = 0.4 # percent of the max energy at which we consider something a beat
 
-        for count, frames in enumerate(stereo_frames):
-            print("item: " + str(round(count/params[2]*filter, 2)) + " l: " + str(frames[0])+ " r: " + str(frames[1]))
-            l_frames.append((round(count/params[2]*filter, 2), frames[0]))
-            r_frames.append((round(count / params[2] * filter, 2), frames[1]))
+    def __init__(self, audio, params, filter):
+        # convert the stereo framse into left and right channels. then enumarte them before passing to the grapher
+        frames = []
+
 
         plotter.title("waveform of wav file")
         #convert the list to a numpy array for easy percentile calculation
-        l_frames = np.array(l_frames)
-        list1, list2 = zip(*l_frames)
+        frames = np.array(audio)
+        list1, list2 = zip(*audio)
         #print(list2)
         #for i in range(len(list2)):
         #    list2[i] = abs(list2[i])
@@ -33,13 +30,14 @@ class graph_builder:
 
         #find the values below the 5th percentile and above the 95th. these areas of high amplitude should help us estimate a beat.
         #hopefully it should average at 2 per second.
-        print(np.percentile(l_frames, 95))
-        print(np.percentile(l_frames, 5))
+        print(np.percentile(frames, 95))
+        print(np.percentile(frames, 5))
         beats = []
         avg_dif = []
         last_i = 0
-        for i, val in l_frames:
-            if val > np.percentile(l_frames, 99) or val < np.percentile(l_frames, 1):
+        for i, val in frames:
+            #if val > np.percentile(frames, 98):
+            if val > np.amax(frames)*self.threshold:
                 beats.append((i, val))
                 avg_dif.append(i - last_i)
                 last_i = i
@@ -65,15 +63,17 @@ class graph_builder:
     def find_bpm(self, audio_list, starting_bpm):
         ls = []
         print(starting_bpm)
-        for i in range(100):
-            for x, y in audio_list:
+        for x, y in audio_list:
 
-                ls.append(round(x % starting_bpm - 0.3 + float(i)/100,2))
-            ls = np.array(ls)
-            print("starting bpm = " + str(round(x % starting_bpm - 0.3 + float(i)/100,2)))
-            #print(stats.mode(ls))
-            print(np.percentile(ls, 50))
-            ls = []
+            ls.append(round(x % starting_bpm,2))
+        ls = np.array(ls)
+        print("starting bpm = " + str(round(x % starting_bpm,2)))
+        print(ls)
+        #print(stats.mode(ls))
+        print(np.percentile(ls, 50))
+        print("manual bpm:")
+        print((len(ls)* 6) )
+        ls = []
         #i think i can do something clever with modulus. if i find the right bpm,
         #most of the numbers should settle on the same value with the right modulus
         #i just need to figure out what that value is.
@@ -81,5 +81,5 @@ class graph_builder:
         #frequent value , then tweak the starting bpm till a best fit is found
 
 
-
-        # read this!! https://askmacgyver.com/blog/tutorial/how-to-implement-tempo-detection-in-your-application
+        #using percentiles to detect beats doesn't work because i will always have the same number of beats. i need a
+        #threshold

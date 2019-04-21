@@ -3,8 +3,10 @@ import wave, struct
 class InputHandler:
     params = []
     stereo_audio = []
+    audio = []
     # how many wav readings we will ignore
     filter = 1000
+    samples = 300
     def __init__(self, args):
         print(args.target)
         print(args.test)
@@ -35,12 +37,17 @@ class InputHandler:
         # https://stackoverflow.com/questions/5804052/improve-speed-of-reading-and-converting-from-binary-file
         # https://www.cameronmacleod.com/blog/reading-wave-python
 
-        # only record the first 6 seconds of audio
-        while waveFile.tell() < self.params[2] * 30:#waveFile.getnframes():
-            decoded = struct.unpack(fmt, waveFile.readframes(1))
-            waveFile.setpos(waveFile.tell() + self.filter-1)
-            #print(decoded)
-            self.stereo_audio.append(decoded)
+        # only record the middle 10 seconds of audio
+        midpoint = waveFile.getnframes() / 2
+
+        while waveFile.tell() < midpoint + (self.params[2] * 5):#waveFile.getnframes():
+            if waveFile.tell() >  midpoint - (self.params[2] * 5):
+                decoded = struct.unpack(fmt, waveFile.readframes(1))
+                #waveFile.setpos(waveFile.tell() + self.filter-1)
+                #print(decoded)
+                self.stereo_audio.append(decoded)
+            else:
+                waveFile.setpos(waveFile.tell() + 1)
         #print(self.stereo_audio)
 
         """
@@ -62,6 +69,40 @@ class InputHandler:
         rock you like a hurricane should be around 120 bpm, so i should see around 2 peaks a second
         """
         waveFile.close()
+        self.sanitise_audio(self.stereo_audio)
+
+    # read this!! https://askmacgyver.com/blog/tutorial/how-to-implement-tempo-detection-in-your-application
+
+    #https://stackoverflow.com/questions/8200010/analyzing-audio-to-create-guitar-hero-levels-automatically
+    def sanitise_audio(self, stereo_signal):
+        # step 1: convert to mono, downsample to
+        modulus = round(len(stereo_signal)/self.samples)
+        print(len(stereo_signal))
+
+        print(modulus)
+        for count, frames in enumerate(stereo_signal):
+            if count % modulus == 0:
+                #print(count)
+                val = int((frames[0] + frames[1])/2)
+                self.audio.append((round(count/self.params[2], 3), val))
+        print(self.audio)
+        print(len(self.audio))
+        # step 2: low pass filter audio
+        # step 3: trim song
+        # step 4: down sample the data to a reasonable number of units
+
+
+        # step 5: normalise the data
+
+        nomalised_audio = []
+        for i, v in self.audio:
+            nomalised_audio.append((i, abs(v)))
+        self.audio = nomalised_audio
+        print(nomalised_audio)
+        pass
+
+    def get_audio(self):
+        return self.audio
 
     def get_stereo(self):
         return self.stereo_audio

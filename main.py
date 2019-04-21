@@ -10,7 +10,7 @@ def init():
     handler = input_handler.InputHandler(args)
 
     # pass the stereo audio to the graphing tool
-    builder = graph_builder.graph_builder(handler.get_stereo(), handler.get_params(), handler.get_filter())
+    builder = graph_builder.graph_builder(handler.get_audio(), handler.get_params(), handler.get_filter())
 
 
 # initialise the input handler
