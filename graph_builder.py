@@ -6,7 +6,7 @@ from scipy import stats
 
 class graph_builder:
 
-    threshold = 0.4 # percent of the max energy at which we consider something a beat
+    threshold = 0.2# percent of the max energy at which we consider something a beat
 
     def __init__(self, audio, params, filter):
         # convert the stereo framse into left and right channels. then enumarte them before passing to the grapher
@@ -35,12 +35,24 @@ class graph_builder:
         beats = []
         avg_dif = []
         last_i = 0
+        for index in range(len(frames)-2):
+            i = frames[index][0]
+            val = frames[index][1]
+            if val > np.amax(frames)*self.threshold\
+                    and frames[index+1][1] < np.amax(frames)*self.threshold\
+                    and frames[index+2][1] < np.amax(frames)*self.threshold:
+                beats.append((i, val))
+                avg_dif.append(i - last_i)
+                last_i = i
+        """
         for i, val in frames:
             #if val > np.percentile(frames, 98):
             if val > np.amax(frames)*self.threshold:
                 beats.append((i, val))
                 avg_dif.append(i - last_i)
                 last_i = i
+            else
+        """
 
         print(beats)
         print(avg_dif)
@@ -83,3 +95,8 @@ class graph_builder:
 
         #using percentiles to detect beats doesn't work because i will always have the same number of beats. i need a
         #threshold
+
+        """
+        when checking if values are within the threshold, we want to asses both the current value and the following two,
+        making sure the first value iis valid and the second two arent.
+        """

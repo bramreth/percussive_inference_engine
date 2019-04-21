@@ -6,6 +6,7 @@ class InputHandler:
     audio = []
     # how many wav readings we will ignore
     filter = 1000
+    sample_len = 15
     samples = 300
     def __init__(self, args):
         print(args.target)
@@ -40,8 +41,8 @@ class InputHandler:
         # only record the middle 10 seconds of audio
         midpoint = waveFile.getnframes() / 2
 
-        while waveFile.tell() < midpoint + (self.params[2] * 5):#waveFile.getnframes():
-            if waveFile.tell() >  midpoint - (self.params[2] * 5):
+        while waveFile.tell() < midpoint + (self.params[2] * self.sample_len):#waveFile.getnframes():
+            if waveFile.tell() >  midpoint - (self.params[2] *  self.sample_len):
                 decoded = struct.unpack(fmt, waveFile.readframes(1))
                 #waveFile.setpos(waveFile.tell() + self.filter-1)
                 #print(decoded)
@@ -112,3 +113,11 @@ class InputHandler:
 
     def get_filter(self):
         return self.filter
+
+    #http://werner.yellowcouch.org/Papers/bpm04/ paper on bpm detection
+    #https://stackoverflow.com/questions/8635063/how-to-get-bpm-and-tempo-audio-features-in-python/37489967
+
+    """
+    info for cutoff filters
+    https://stackoverflow.com/questions/24920346/filtering-a-wav-file-using-python
+    """
