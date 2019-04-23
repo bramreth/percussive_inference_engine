@@ -1,4 +1,4 @@
-import wave, struct
+import wave, struct, librosa_analysis
 #http://doc.sagemath.org/html/en/reference/misc/sage/media/wav.html
 class InputHandler:
     params = []
@@ -8,11 +8,16 @@ class InputHandler:
     filter = 1000
     sample_len = 15
     samples = 300
+
     def __init__(self, args):
         print(args.target)
         print(args.test)
-        self.validate_target(args.target)
+        self.analyse_target(args.target)
+        #self.validate_target(args.target)
 
+    #use librosa for feature extraction and anlysis
+    def analyse_target(self, target):
+        librosa_analysis.analyse_file(target)
     # take the input
     def validate_target(self, target):
         waveFile = wave.open(target, 'r')
