@@ -1,9 +1,10 @@
 import librosa
 import librosa.display
-from music21 import stream, instrument
+from music21 import stream, instrument, chord
 from music21.note import Note
 from midi2audio import FluidSynth
 import os, time
+import midi_builder
 
 def analyse_file(filename):
     # y is the time series as a numpy array
@@ -23,8 +24,8 @@ def analyse_file(filename):
     #display graphs for analysis
     librosa.display.waveplot(y)
 
-
-
+    midi_builder.build_drums(tempo, len(beat_times))
+    """
     drumPart = stream.Part()
 
     bass = instrument.BassDrum()
@@ -35,22 +36,40 @@ def analyse_file(filename):
     i = 0
 
     drumMeasure = stream.Measure()
+    """
+    """
+    C2 bass drum
+    D2 snare
+    E2 snare 2
+    C3 tom
+    D3 cowbell
+    F#2 closed hi
+    """
+    """
     for item in beat_times:
 
         n = Note("A2")
-        i = not i
 
-        if i:
+        if i % 2 == 0:
             #the standard note for a kick drum
-            n = Note("C2")
-            
+            n = chord.Chord(["C2", "F#2"])
+            #n = Note("C2")
         else:
-
             #standard for a snare
-            n = Note("D2")
+            n = chord.Chord(["D2", "F#2"])
+            #n = Note("D2")
+        #assuming 4/4 this is the final beat of the bar?
+        if i % 8 == 7:
+            n = chord.Chord(["D2", "F#2"])
+            n.volume = 120
         n.offset = item
         drumMeasure.append(n)
+
+        i += 1
+    #for item in range(len(beat_times)):
+    #    drumMeasure[item].offset = beat_times[item]
     path = 'beat_file/beat_file.mid'
+    print(drumMeasure.secondsMap)
     drumPart.append(drumMeasure)
     fp = drumPart.write('midi', fp=path)
     # This line actually generate the midi on my mac but there is no relevant software to read it and the opening fail
@@ -60,6 +79,7 @@ def analyse_file(filename):
     #fs = FluidSynth()
     #FluidSynth().play_midi(path)
     #fs.midi_to_audio(path, "tst.wav")
+    """
 
 #http://conference.scipy.org/proceedings/scipy2015/pdfs/brian_mcfee.pdf
 #https://librosa.github.io/librosa/tutorial.html
