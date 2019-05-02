@@ -1,4 +1,4 @@
-import wave, struct, librosa_analysis, verse_detector
+import wave, struct, librosa_analysis, verse_detector, yaml
 #http://doc.sagemath.org/html/en/reference/misc/sage/media/wav.html
 class InputHandler:
     params = []
@@ -8,20 +8,44 @@ class InputHandler:
     filter = 1000
     sample_len = 15
     samples = 300
+    view = False
 
     def __init__(self, args):
-        print(args.target)
-        print(args.test)
-        self.analyse_target(args.target)
-        #self.validate_target(args.target)
+        print("target input song file: " + str(args.target))
+        print("whether or not we are in test mode (verbosity): " + str(args.test))
+        print("whether or not we want to view the input's chroma: " + str(args.view))
+        print("a structure file: " + str(args.structure))
 
-    #use librosa for feature extraction and anlysis
-    def analyse_target(self, target):
+        if args.view:
+            # view the chroma of the output file
+            self.view = args.view
+            self.view_chroma(args.target)
+            self.validate_target(args.target)
+        elif args.structure:
+            structure = self.load_yaml(args.structure)
+            self.analyse_target(args.target, structure)
+        else:
+            self.analyse_target(args.target, [])
 
-        #returns the estimated best time of the chorus
-        c_start = verse_detector.show_details(target)
+    def view_chroma(self, target):
+        verse_detector.show_details(target)
 
-        librosa_analysis.analyse_file(target, c_start)
+    # apply the imported structure to the output midi file
+    def analyse_target(self, target, structure):
+        librosa_analysis.analyse_file(target, structure)
+
+    def load_yaml(self, path):
+        with open(path, 'r') as stream:
+            try:
+                print("yaml successful load")
+                #print(yaml.safe_load(stream))
+                return yaml.safe_load(stream)
+            except yaml.YAMLError as exc:
+                print(exc)
+# -----------------------------------------------------------
+# all the code from this point on requires sanitsing
+# ---------------------------
+
     # take the input
     def validate_target(self, target):
         waveFile = wave.open(target, 'r')
@@ -78,6 +102,7 @@ class InputHandler:
         
         rock you like a hurricane should be around 120 bpm, so i should see around 2 peaks a second
         """
+
         waveFile.close()
         self.sanitise_audio(self.stereo_audio)
 
@@ -122,7 +147,7 @@ class InputHandler:
 
     def get_filter(self):
         return self.filter
-
+    
     #http://werner.yellowcouch.org/Papers/bpm04/ paper on bpm detection
     #https://stackoverflow.com/questions/8635063/how-to-get-bpm-and-tempo-audio-features-in-python/37489967
 

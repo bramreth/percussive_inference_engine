@@ -12,6 +12,7 @@ def show_details(path):
     time_time_similarity.display()
     time_lag_similarity.display()
 
-    return find_and_output_chorus(path, "beat_file/chorus.wav", 10)
-
     #https://github.com/vivjay30/pychorus
+
+def find_chorus(path):
+    return find_and_output_chorus(path, "beat_file/chorus.wav", 10)
