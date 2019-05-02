@@ -1,4 +1,4 @@
-import input_handler, graph_builder
+import input_handler, graph_builder, verse_detector
 import argparse
 
 

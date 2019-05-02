@@ -6,7 +6,7 @@ from midi2audio import FluidSynth
 import os, time
 import midi_builder
 
-def analyse_file(filename):
+def analyse_file(filename, estimated_start):
     # y is the time series as a numpy array
     # sr contains a default sampling rate of 22050 hz
     y, sr = librosa.load(filename)
@@ -24,7 +24,7 @@ def analyse_file(filename):
     #display graphs for analysis
     librosa.display.waveplot(y)
 
-    midi_builder.build_drums(tempo, len(beat_times))
+    midi_builder.build_drums(tempo, len(beat_times), estimated_start)
     """
     drumPart = stream.Part()
 

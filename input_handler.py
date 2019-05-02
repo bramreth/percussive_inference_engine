@@ -1,4 +1,4 @@
-import wave, struct, librosa_analysis
+import wave, struct, librosa_analysis, verse_detector
 #http://doc.sagemath.org/html/en/reference/misc/sage/media/wav.html
 class InputHandler:
     params = []
@@ -17,7 +17,11 @@ class InputHandler:
 
     #use librosa for feature extraction and anlysis
     def analyse_target(self, target):
-        librosa_analysis.analyse_file(target)
+
+        #returns the estimated best time of the chorus
+        c_start = verse_detector.show_details(target)
+
+        librosa_analysis.analyse_file(target, c_start)
     # take the input
     def validate_target(self, target):
         waveFile = wave.open(target, 'r')
