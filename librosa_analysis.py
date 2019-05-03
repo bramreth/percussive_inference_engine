@@ -7,7 +7,7 @@ import os, time
 import midi_builder
 
 
-def analyse_file(filename, structure):
+def analyse_file(filename, structure, audio):
     # y is the time series as a numpy array
     # sr contains a default sampling rate of 22050 hz
     y, sr = librosa.load(filename)
@@ -25,7 +25,7 @@ def analyse_file(filename, structure):
     #display graphs for analysis
     librosa.display.waveplot(y)
 
-    midi_builder.build_drums(tempo, len(beat_times), structure)
+    midi_builder.build_drums(tempo, len(beat_times), structure, audio)
     """
     drumPart = stream.Part()
 

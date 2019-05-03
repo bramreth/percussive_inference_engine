@@ -29,11 +29,11 @@ COMPONENT_LOW_4 = [KICK, SILENCE, SNARE, KICK]
 track = 0
 channel = 0
 time = 0  # In beats
-duration = 1  # In beats
+duration = 0.5  # In beats
 volume = 100 # 0-127, as per the MIDI standard
 
 
-def build_drums(bpm, len, structure):
+def build_drums(bpm, len, structure, audio):
     degrees = [KICK, KICK, KICK, KICK, SNARE]  # MIDI note number
     track = 0
     channel = 0
@@ -69,13 +69,17 @@ def build_drums(bpm, len, structure):
             time_converted = int(bpm / 60 * item[key])
             if key not in verses.keys():
                 verses[key] = [gen_loop_low(), gen_loop_high()]
+                backup_section(verses, tempo, key)
             generate_track_from_source(myMIDI, start, time_converted, verses[key][0], verses[key][1])
             start = time_converted
         # build track from structure
         # generate_track(myMIDI, time, int(start_time), 1)
         # generate_track(myMIDI, int(start_time), len, 2)
         generate_unique_track(myMIDI, start, len)
-        pass
+        print("average audio energy")
+        print(overall_volume_analysis(audio))
+        print("first 5 seconds audio energy")
+        print(volume_analysis(0, 5, audio))
     else:
         #generate_track(myMIDI, time, time + int(len/2), 1)
        # generate_track(myMIDI, int(len/2), len, 2)
@@ -110,6 +114,36 @@ def build_drums(bpm, len, structure):
     inflection
     fear
     """
+def overall_volume_analysis(audio):
+    sum = 0
+    count = 0
+    for index, value in audio:
+        sum += value
+        count += 1
+    if count == 0:
+        return 0
+    return sum / count
+
+#takes the analysed wav file and returns the average volume in a given period
+def volume_analysis(start, end, audio):
+    sum = 0
+    count = 0
+    for index, value in audio:
+        if start < index < end:
+            sum += value
+            count += 1
+    if count == 0:
+        return 0
+    return sum / count
+
+
+def backup_section(verses, tempo, key):
+    sectionMIDI = MIDIFile(1)
+    sectionMIDI.addTempo(track, time, tempo)
+    generate_track_from_source(sectionMIDI, 0, 8, verses[key][0], verses[key][1])
+    with open("beat_file/"+key+".mid", "wb") as output_file:
+        sectionMIDI.writeFile(output_file)
+
 
 def gen_loop_low():
     track = []
@@ -156,7 +190,7 @@ def gen_loop_high():
             track.append(SILENCE)
         elif choice < 90:
             track.append(CLOSED_HI)
-        elif choice < 95:
+        elif choice < 100:
             track.append(OPEN_HI)
         else:
             track.append(CRASH)
