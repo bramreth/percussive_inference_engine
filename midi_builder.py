@@ -30,7 +30,7 @@ track = 0
 channel = 0
 time = 0  # In beats
 duration = 0.5  # In beats
-volume = 100 # 0-127, as per the MIDI standard
+volume = 80 # 0-127, as per the MIDI standard
 
 
 def build_drums(bpm, len, structure, audio):
@@ -45,75 +45,39 @@ def build_drums(bpm, len, structure, audio):
     myMIDI.addTempo(track, time, tempo)
     index = 1
 
-    """
-    est chorus
-    
-    print("Best chorus found at {0:g} min {1:.2f} sec".format(
-        chorus_start // 60, chorus_start % 60))
-        this is measured as time in seconds, requires converting to a beat number
-        
-        bpm
-        120 pm is 2 beats per second
-        bpm / 60 * time
-    """
-    #start_time = bpm / 60 * estimated_start
-    #print(len)
-    #time needs converting to beats
     if structure:
         start = 0
-
+        last_time = 0
         verses = {}
+
+        # find the overall song energy for volume analysis
+        overall_energy = overall_volume_analysis(audio)
+        print("average audio energy: " + str(overall_energy))
 
         for item in structure:
             key = next(iter(item))
+
+            energy = volume_analysis(last_time, item[key], audio)
+            print(str(key) + " energy is " + str(energy))
+            section_energy = int(volume + (((energy / overall_energy) - 1) * 40))
+            print(section_energy)
             time_converted = int(bpm / 60 * item[key])
             if key not in verses.keys():
                 verses[key] = [gen_loop_low(), gen_loop_high()]
-                backup_section(verses, tempo, key)
-            generate_track_from_source(myMIDI, start, time_converted, verses[key][0], verses[key][1])
+                backup_section(verses, tempo, key, section_energy)
+            #generate_track_from_source(myMIDI, start, time_converted, verses[key][0], verses[key][1], section_energy)
             start = time_converted
-        # build track from structure
-        # generate_track(myMIDI, time, int(start_time), 1)
-        # generate_track(myMIDI, int(start_time), len, 2)
-        generate_unique_track(myMIDI, start, len)
-        print("average audio energy")
-        print(overall_volume_analysis(audio))
-        print("first 5 seconds audio energy")
-        print(volume_analysis(0, 5, audio))
+            last_time = item[key]
     else:
-        #generate_track(myMIDI, time, time + int(len/2), 1)
-       # generate_track(myMIDI, int(len/2), len, 2)
-       # generate_track(myMIDI, time, len, random.randint(1, 3))
+        print("without a structure file no volumetric analysis is availiable")
         generate_unique_track(myMIDI, time, len)
-       # find_drum_def(myMIDI, time, len)
+        with open("beat_file/beat_file.mid", "wb") as output_file:
+            myMIDI.writeFile(output_file)
 
-    """
-    for i in range(len):
-        myMIDI.addNote(track, channel, degrees[i%4], time + i, duration, volume)
-        if i % 4 == 0:
-            myMIDI.addNote(track, channel, degrees[4], time + i, duration, volume)
-        myMIDI.addNote(track, channel, CLOSED_HI, time + i, duration, volume)
-        #index = not index
-
-    #for i, pitch in enumerate(degrees):
-     #   myMIDI.addNote(track, channel, pitch, time + i, duration, volume)
-    """
     with open("beat_file/beat_file.mid", "wb") as output_file:
         myMIDI.writeFile(output_file)
-    """
-    needed features
-    emphasising beats
-    tone, speed, volume
-    choosing percussion https://www.edb.gov.hk/attachment/tc/curriculum-development/kla/arts-edu/nss/gm_drumlist_8050.pdf
-    ---
-    silence
-    solos 
-    genre
-    memory of creative space
-    chorus analysis
-    inflection
-    fear
-    """
+
+# return the mean amplitude in a given time for volumetric analysis
 def overall_volume_analysis(audio):
     sum = 0
     count = 0
@@ -137,10 +101,10 @@ def volume_analysis(start, end, audio):
     return sum / count
 
 
-def backup_section(verses, tempo, key):
+def backup_section(verses, tempo, key, volume_in):
     sectionMIDI = MIDIFile(1)
     sectionMIDI.addTempo(track, time, tempo)
-    generate_track_from_source(sectionMIDI, 0, 8, verses[key][0], verses[key][1])
+    generate_track_from_source(sectionMIDI, 0, 8, verses[key][0], verses[key][1], volume_in)
     with open("beat_file/"+key+".mid", "wb") as output_file:
         sectionMIDI.writeFile(output_file)
 
@@ -220,18 +184,23 @@ def generate_unique_track(MIDI_FILE, time_start, time_end):
             MIDI_FILE.addNote(track, channel, track_low[i % 8], time_start + i / 2, duration, volume)
 
 
-def generate_track_from_source(MIDI_FILE, time_start, time_end, track_low, track_hi):
+def generate_track_from_source(MIDI_FILE, time_start, time_end, track_low, track_hi, volume_in):
     print("start: " + str(time_start))
     print("end: " + str(time_end))
+    # volume analysis, main beats are louder
+    beat_volume = volume_in
     for i in range((time_end - time_start) * 2):
+        beat_volume = volume_in
+        if i % 8 != 0:
+            beat_volume -= 20
         if track_hi[i % 8] != 0:
-            MIDI_FILE.addNote(track, channel, track_hi[i % 8], time_start + i / 2, duration, volume)
+            MIDI_FILE.addNote(track, channel, track_hi[i % 8], time_start + i / 2, duration, volume_in)
         if track_low[i % 8] == 1:
             # snare and kick
-            MIDI_FILE.addNote(track, channel, SNARE, time_start + i / 2, duration, volume)
-            MIDI_FILE.addNote(track, channel, KICK, time_start + i / 2, duration, volume)
+            MIDI_FILE.addNote(track, channel, SNARE, time_start + i / 2, duration, beat_volume)
+            MIDI_FILE.addNote(track, channel, KICK, time_start + i / 2, duration, beat_volume)
         elif track_low[i % 8] != 0:
-            MIDI_FILE.addNote(track, channel, track_low[i % 8], time_start + i / 2, duration, volume)
+            MIDI_FILE.addNote(track, channel, track_low[i % 8], time_start + i / 2, duration, beat_volume)
 
 
 def generate_track(MIDI_FILE, time_start, time_end, type):
