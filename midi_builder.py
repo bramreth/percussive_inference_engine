@@ -13,19 +13,6 @@ CRASH = 49
 SILENCE = 0
 KICK_SNARE = 1
 
-BASIC_TRACK_1 = [KICK, SILENCE, SNARE, SILENCE, KICK, KICK, SNARE, SILENCE]
-BASIC_TRACK_2 = [KICK, SILENCE, SNARE, KICK, KICK, SILENCE, SNARE, SILENCE]
-
-BASIC_TRACK_SLOW = [KICK, SILENCE, SNARE, SILENCE, KICK, SILENCE, SILENCE, SILENCE]
-
-BASIC_TRACK_HIGH = [CLOSED_HI, CLOSED_HI, CLOSED_HI, CLOSED_HI, CLOSED_HI, CLOSED_HI, CLOSED_HI, CLOSED_HI]
-BASIC_TRACK_HIGH_ACC = [CLOSED_HI, CLOSED_HI, CLOSED_HI, CLOSED_HI, CLOSED_HI, CLOSED_HI, OPEN_HI, CLOSED_HI]
-
-
-COMPONENT_LOW_1 = [KICK, SILENCE, KICK, SILENCE]
-COMPONENT_LOW_2 = [KICK, SILENCE, SNARE, SILENCE]
-COMPONENT_LOW_3 = [KICK, KICK, SNARE, SILENCE]
-COMPONENT_LOW_4 = [KICK, SILENCE, SNARE, KICK]
 track = 0
 channel = 0
 time = 0  # In beats
@@ -160,13 +147,6 @@ def gen_loop_high():
             track.append(CRASH)
     return track
 
-"""
-def find_drum_def(MIDI_FILE, time_start, time_end):
-    t = [KICK, SNARE, CLOSED_HI, OPEN_HI, LOW_TOM, COWBELL, HIGH_TOM, CRASH, SILENCE]
-    for i in range((time_end - time_start) * 2):
-        if t[i % 9] != 0:
-            MIDI_FILE.addNote(track, channel, t[i % 9], time_start + i / 2, duration, volume)
-"""
 
 def generate_unique_track(MIDI_FILE, time_start, time_end):
     print("start: " + str(time_start))
@@ -174,14 +154,17 @@ def generate_unique_track(MIDI_FILE, time_start, time_end):
     track_low = gen_loop_low()
     track_hi = gen_loop_high()
     for i in range((time_end - time_start) * 2):
+        beat_volume = volume
+        if i % 4 != 0:
+            beat_volume -= 20
         if track_hi[i % 8] != 0:
-            MIDI_FILE.addNote(track, channel, track_hi[i % 8], time_start + i / 2, duration, volume)
+            MIDI_FILE.addNote(track, channel, track_hi[i % 8], time_start + i / 2, duration, beat_volume)
         if track_low[i % 8] == 1:
             # snare and kick
-            MIDI_FILE.addNote(track, channel, SNARE, time_start + i / 2, duration, volume)
-            MIDI_FILE.addNote(track, channel, KICK, time_start + i / 2, duration, volume)
+            MIDI_FILE.addNote(track, channel, SNARE, time_start + i / 2, duration, beat_volume)
+            MIDI_FILE.addNote(track, channel, KICK, time_start + i / 2, duration, beat_volume)
         elif track_low[i % 8] != 0:
-            MIDI_FILE.addNote(track, channel, track_low[i % 8], time_start + i / 2, duration, volume)
+            MIDI_FILE.addNote(track, channel, track_low[i % 8], time_start + i / 2, duration, beat_volume)
 
 
 def generate_track_from_source(MIDI_FILE, time_start, time_end, track_low, track_hi, volume_in):
@@ -191,41 +174,13 @@ def generate_track_from_source(MIDI_FILE, time_start, time_end, track_low, track
     beat_volume = volume_in
     for i in range((time_end - time_start) * 2):
         beat_volume = volume_in
-        if i % 8 != 0:
+        if i % 4 != 0:
             beat_volume -= 20
         if track_hi[i % 8] != 0:
-            MIDI_FILE.addNote(track, channel, track_hi[i % 8], time_start + i / 2, duration, volume_in)
+            MIDI_FILE.addNote(track, channel, track_hi[i % 8], time_start + i / 2, duration, beat_volume)
         if track_low[i % 8] == 1:
             # snare and kick
             MIDI_FILE.addNote(track, channel, SNARE, time_start + i / 2, duration, beat_volume)
             MIDI_FILE.addNote(track, channel, KICK, time_start + i / 2, duration, beat_volume)
         elif track_low[i % 8] != 0:
             MIDI_FILE.addNote(track, channel, track_low[i % 8], time_start + i / 2, duration, beat_volume)
-
-
-def generate_track(MIDI_FILE, time_start, time_end, type):
-    #doubling and dividing the range lets us use 8th notes in our patterns
-    track_hi = []
-    track_low = []
-    if type == 1:
-        track_hi = BASIC_TRACK_HIGH_ACC
-        track_low = BASIC_TRACK_1
-    elif type == 2:
-        track_hi = BASIC_TRACK_HIGH
-        track_low = BASIC_TRACK_2
-    elif type == 3:
-        track_hi = BASIC_TRACK_HIGH_ACC
-        track_low = BASIC_TRACK_SLOW
-
-    for i in range((time_end - time_start) * 2):
-        if track_hi[i % 8] != 0:
-            MIDI_FILE.addNote(track, channel, track_hi[i % 8], time_start + i / 2, duration, volume)
-        if track_low[i % 8] == 1:
-            # snare and kick
-            MIDI_FILE.addNote(track, channel, SNARE, time_start + i / 2, duration, volume)
-            MIDI_FILE.addNote(track, channel, KICK, time_start + i / 2, duration, volume)
-        elif track_low[i % 8] != 0:
-            MIDI_FILE.addNote(track, channel, track_low[i % 8], time_start + i / 2, duration, volume)
-    #https://towardsdatascience.com/finding-choruses-in-songs-with-python-a925165f94a8
-
-    #http: // learndrumsforfree.com / 2015 / 07 / 10 - basic - rock - drum - beats /

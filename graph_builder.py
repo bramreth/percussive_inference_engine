@@ -44,32 +44,13 @@ class graph_builder:
                 beats.append((i, val))
                 avg_dif.append(i - last_i)
                 last_i = i
-        """
-        for i, val in frames:
-            #if val > np.percentile(frames, 98):
-            if val > np.amax(frames)*self.threshold:
-                beats.append((i, val))
-                avg_dif.append(i - last_i)
-                last_i = i
-            else
-        """
 
         print(beats)
         print(avg_dif)
         print(np.percentile(np.array(avg_dif), 50))
         #this appears to give a better approximation of bpm than
         print(np.mean(np.array(avg_dif)))
-        #we now need to find a value that intersects the most points possible in
-        """
-        methods to interpolate thebeatpoints:
-        i need to take a variety of valid beats as starting points, then apply a beat near the mean 
-        rate. the beat that intersects the most valid point
-        
-        we will need an error value for whether the beat is at the right point.
-        
-        it seems reasonable to say this should be our smallest time increment we are measuring.
-        i believe at the moment this is 0.02 seconds, however will need calculating dynamically
-        """
+        #we now need to find a value that intersects the most points possible
         self.find_bpm(beats, round(np.mean(np.array(avg_dif)), 2))
 
     def find_bpm(self, audio_list, starting_bpm):
@@ -86,17 +67,3 @@ class graph_builder:
         print("manual bpm:")
         print((len(ls)* 6) )
         ls = []
-        #i think i can do something clever with modulus. if i find the right bpm,
-        #most of the numbers should settle on the same value with the right modulus
-        #i just need to figure out what that value is.
-        #if we jsut mode every value in the list by the same amount and tally up the modally mosy
-        #frequent value , then tweak the starting bpm till a best fit is found
-
-
-        #using percentiles to detect beats doesn't work because i will always have the same number of beats. i need a
-        #threshold
-
-        """
-        when checking if values are within the threshold, we want to asses both the current value and the following two,
-        making sure the first value iis valid and the second two arent.
-        """
